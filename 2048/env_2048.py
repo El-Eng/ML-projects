@@ -23,7 +23,7 @@ class BlockDoubleEnv(gym.Env):
 
         # Observations are dictionaries with the agent's and the target's location.
         # box
-        self.observation_space = spaces.Box(np.array((0, 2)), np.array((self.size-1, 2048)))
+        self.observation_space = spaces.Box(low= 0, high= 2048, shape=(4, 4), dtype=int)
 
         # We have 4 actions, corresponding to "right", "up", "left", "down", "right"
         self.action_space = spaces.Discrete(4)
