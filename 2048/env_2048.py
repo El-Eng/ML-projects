@@ -1,3 +1,4 @@
+import re
 import numpy as np
 import gym
 from gym import Env, spaces, utils
@@ -67,8 +68,8 @@ class BlockDoubleEnv(gym.Env):
 
     def step(self, action, done=False):
         info = self._get_info()
-        # 0,1,2,3 => up,right,down,left (left right odd)
-        direction = action + 1
+        # 0,1,2,3 => right,down,left,up (left right odd)
+        direction = action
         # Logic for shiftng board left and right
         flip = np.rot90(self._boardstate, direction)
         shift = np.zeros((self.size,self.size))
@@ -76,16 +77,31 @@ class BlockDoubleEnv(gym.Env):
         for key, row in enumerate(flip):
             row = row[row != 0]
             x = len(row)-1
+            #print(row)
             while 0 < x:
-                print(x)
-                while row[x] == row[x-1]:
-                    row[x] = row[x]^2
+                if row[x] == row[x-1]:
+                    row[x] = row[x]*2
+                    row[x-1] = 0
+                    row = row[row != 0]
+                    #print(row)
+                    x-=2
                 else:
                     x -= 1
-            shift[key] = np.pad(row,(0, self.size - len(row)), 'constant')
-
+            shift[key] = np.pad(row,(self.size - len(row), 0), 'constant')
+            #print(shift[key])
         result = np.rot90(shift, 4-direction)
-        self._boardstate = result
+
+
+        if not np.array_equal(self._boardstate, result):
+            # add in new number
+            x = self.np_random.integers(0, self.size-1)
+            y = self.np_random.integers(0, self.size-1)
+            while result[x][y] != 0:
+                x = self.np_random.integers(0, self.size-1)
+                y = self.np_random.integers(0, self.size-1)
+
+            result[x][y] = np.random.choice(a=['2', '4'], p=['0.9', '0.1'])
+            self._boardstate = result
 
         point = 0
         # if larger tile number than before grant a point
@@ -97,7 +113,7 @@ class BlockDoubleEnv(gym.Env):
         if self._boardstate.max() >= 2048:
             done=True 
 
-        reward = 1 if done else point  # Binary sparse rewards
+        reward = 100 if done else point  # Binary sparse rewards
 
         observation = self._get_obs()
         info = self._get_info()
