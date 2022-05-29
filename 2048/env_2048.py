@@ -66,7 +66,7 @@ class BlockDoubleEnv(gym.Env):
         info = self._get_info()
         return (observation, info) if return_info else observation
 
-    def step(self, action, done=False):
+    def step(self, action, done=False, loose=False):
         info = self._get_info()
         # 0,1,2,3 => right,down,left,up (left right odd)
         direction = action
@@ -91,16 +91,15 @@ class BlockDoubleEnv(gym.Env):
             #print(shift[key])
         result = np.rot90(shift, 4-direction)
 
-
-        if not np.array_equal(self._boardstate, result):
+        if np.all(result):
+            done = True
+        elif not np.array_equal(self._boardstate, result):
             # add in new number
-            x = self.np_random.integers(0, self.size-1)
-            y = self.np_random.integers(0, self.size-1)
-            while result[x][y] != 0:
-                x = self.np_random.integers(0, self.size-1)
-                y = self.np_random.integers(0, self.size-1)
+            zeros = np.argwhere(result == 0) # Indices where board == 0
+            indices = np.ravel_multi_index([zeros[:, 0], zeros[:, 1]], result.shape) # Linear indices
+            ind = np.random.choice(indices) # Randomly select your index to replace
+            result[np.unravel_index(ind, result.shape)] = np.random.choice(a=['2', '4'], p=['0.9', '0.1']) # Perform the replacement
 
-            result[x][y] = np.random.choice(a=['2', '4'], p=['0.9', '0.1'])
             self._boardstate = result
 
         point = 0
@@ -109,13 +108,13 @@ class BlockDoubleEnv(gym.Env):
             point = 0.1
 
         # An episode is done if the max tile is 2048
-        
+        reward = point
+
         if self._boardstate.max() >= 2048:
             done=True 
+            reward = 100 
 
-        reward = 100 if done else point  # Binary sparse rewards
-
-        observation = self._get_obs()
+        observation = self._get_obs().flatten()
         info = self._get_info()
 
         return observation, reward, done, info
