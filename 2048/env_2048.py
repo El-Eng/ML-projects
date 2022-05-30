@@ -92,7 +92,17 @@ class BlockDoubleEnv(gym.Env):
         result = np.rot90(shift, 4-direction)
 
         if np.all(result):
-            done = True
+            lost = True
+            for row in result:
+                for x in range(len(row)-1):
+                    if row[x] == row[x+1]:
+                        lost = False
+            for row in np.rot90(result, 1):
+                for x in range(len(row)-1):
+                    if row[x] == row[x+1]:
+                        lost = False
+            if lost:
+                done = True
         elif not np.array_equal(self._boardstate, result):
             # add in new number
             zeros = np.argwhere(result == 0) # Indices where board == 0
@@ -114,7 +124,7 @@ class BlockDoubleEnv(gym.Env):
             done=True 
             reward = 100 
 
-        observation = self._get_obs().flatten()
+        observation = self._get_obs()#.flatten()
         info = self._get_info()
 
         return observation, reward, done, info
