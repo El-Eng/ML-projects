@@ -67,6 +67,7 @@ class BlockDoubleEnv(gym.Env):
         return (observation, info) if return_info else observation
 
     def step(self, action, done=False, loose=False):
+        point = 0
         info = self._get_info()
         # 0,1,2,3 => right,down,left,up (left right odd)
         direction = action
@@ -103,7 +104,10 @@ class BlockDoubleEnv(gym.Env):
                         lost = False
             if lost:
                 done = True
-        elif not np.array_equal(self._boardstate, result):
+        
+        if np.array_equal(self._boardstate, result):
+            done=True
+        else:
             # add in new number
             zeros = np.argwhere(result == 0) # Indices where board == 0
             indices = np.ravel_multi_index([zeros[:, 0], zeros[:, 1]], result.shape) # Linear indices
@@ -111,8 +115,7 @@ class BlockDoubleEnv(gym.Env):
             result[np.unravel_index(ind, result.shape)] = np.random.choice(a=['2', '4'], p=['0.9', '0.1']) # Perform the replacement
 
             self._boardstate = result
-
-        point = 0
+        
         # if larger tile number than before grant a point
         if self._boardstate.max() > info['score']:
             point = 0.1
