@@ -24,7 +24,7 @@ class BlockDoubleEnv(gym.Env):
 
         # Observations are dictionaries with the agent's and the target's location.
         # box
-        self.observation_space = spaces.Box(low= 0, high= 2048, shape=(4, 4), dtype=int)
+        self.observation_space = spaces.Box(low= 0, high= 2048, shape=(16, ), dtype=int)
 
         # We have 4 actions, corresponding to "right", "up", "left", "down", "right"
         self.action_space = spaces.Discrete(4)
@@ -49,7 +49,6 @@ class BlockDoubleEnv(gym.Env):
         #self.renderer = Renderer(render_mode, self._render_frame)
     def _get_obs(self):
         return  self._boardstate
-
     def _get_info(self):
         return {"score": np.amax(self._boardstate)}
 
@@ -62,7 +61,7 @@ class BlockDoubleEnv(gym.Env):
         boardstart[self.np_random.integers(0, self.size-1)][self.np_random.integers(0, self.size-1)] = 2
         self._boardstate = boardstart
 
-        observation = self._get_obs()
+        observation = self._get_obs().flatten()
         info = self._get_info()
         return (observation, info) if return_info else observation
 
@@ -127,7 +126,7 @@ class BlockDoubleEnv(gym.Env):
             done=True 
             reward = 100 
 
-        observation = self._get_obs()#.flatten()
+        observation = self._get_obs().flatten()
         info = self._get_info()
 
         return observation, reward, done, info
