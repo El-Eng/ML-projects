@@ -50,7 +50,7 @@ class BlockDoubleEnv(gym.Env):
     def _get_obs(self):
         return  self._boardstate
     def _get_info(self):
-        return {"score": np.amax(self._boardstate)}
+        return {"score": np.sum(self._boardstate)}
 
     def reset(self, seed=None, return_info=False, options=None):
         # We need the following line to seed self.np_random
@@ -81,6 +81,7 @@ class BlockDoubleEnv(gym.Env):
             while 0 < x:
                 if row[x] == row[x-1]:
                     row[x] = row[x]*2
+                    point += row[x]
                     row[x-1] = 0
                     row = row[row != 0]
                     #print(row)
@@ -106,6 +107,7 @@ class BlockDoubleEnv(gym.Env):
         
         if np.array_equal(self._boardstate, result):
             done=True
+            pass
         else:
             # add in new number
             zeros = np.argwhere(result == 0) # Indices where board == 0
@@ -115,16 +117,16 @@ class BlockDoubleEnv(gym.Env):
 
             self._boardstate = result
         
-        # if larger tile number than before grant a point
-        if self._boardstate.max() > info['score']:
-            point = 0.1
+        # # if larger tile number than before grant a point
+        # if self._boardstate.max() > info['score']:
+        #     point = 0.1
 
         # An episode is done if the max tile is 2048
         reward = point
 
-        if self._boardstate.max() >= 2048:
-            done=True 
-            reward = 100 
+        # if self._boardstate.max() >= 2048:
+        #     done=True 
+        #     reward = 100 
 
         observation = self._get_obs().flatten()
         info = self._get_info()
